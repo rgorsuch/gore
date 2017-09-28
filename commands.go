@@ -54,6 +54,11 @@ func init() {
 			arg:      "[<file>]",
 			document: "write out current source",
 		},
+        {
+            name:     "reset",
+            action:   actionReset,
+            document: "reset",
+        },
 		{
 			name:     "doc",
 			action:   actionDoc,
@@ -167,6 +172,10 @@ func completeDoc(s *Session, prefix string) []string {
 	}
 
 	return result
+}
+
+func actionReset(s *Session, arg string) error {
+  return s.Reset()
 }
 
 func actionPrint(s *Session, _ string) error {

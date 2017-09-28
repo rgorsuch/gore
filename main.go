@@ -185,6 +185,8 @@ package main
 
 import %q
 
+%s
+
 func ` + printerName + `(xx ...interface{}) {
 	for _, x := range xx {
 		%s
@@ -222,10 +224,11 @@ func NewSession() (*Session, error) {
 	}
 
 	var initialSource string
+	goreStartup, _ := ioutil.ReadFile(os.Getenv("HOME") + "/.gorc")
 	for _, pp := range printerPkgs {
 		_, err := s.Types.Importer.Import(pp.path)
 		if err == nil {
-			initialSource = fmt.Sprintf(initialSourceTemplate, pp.path, pp.code)
+			initialSource = fmt.Sprintf(initialSourceTemplate, pp.path, string(goreStartup), pp.code)
 			break
 		}
 		debugf("could not import %q: %s", pp.path, err)
@@ -399,6 +402,33 @@ func (s *Session) reset() error {
 
 	return nil
 }
+
+func (s *Session) Reset() error {
+  var initialSource string
+  goreStartup, _ := ioutil.ReadFile("/Users/ryan.gorsuch/.gorc")
+
+	for _, pp := range printerPkgs {
+      _, err := s.Types.Importer.Import(pp.path)
+      if err == nil {
+          initialSource = fmt.Sprintf(initialSourceTemplate, pp.path, string(goreStartup), pp.code)
+          break
+      }
+      debugf("could not import %q: %s", pp.path, err)
+  }
+
+  if initialSource == "" {
+      return fmt.Errorf(`Could not load pretty printing package (even "fmt"; something is wrong)`)
+  }
+  file, err := parser.ParseFile(s.Fset, "gore_session.go", initialSource, parser.Mode(0))
+  if err != nil {
+      return err
+  }
+
+  s.File = file
+  s.mainBody = s.mainFunc().Body
+  return nil
+}
+ 
 
 func (s *Session) Eval(in string) error {
 	debugf("eval >>> %q", in)
