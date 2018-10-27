@@ -26,6 +26,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"syscall"
 
@@ -224,11 +225,11 @@ func NewSession() (*Session, error) {
 	}
 
 	var initialSource string
-	goreStartup, _ := ioutil.ReadFile(os.Getenv("HOME") + "/.gorc")
+	goreStartup, _ := ioutil.ReadFile("/Users/ryan.gorsuch/.gorc")
 	for _, pp := range printerPkgs {
 		_, err := s.Types.Importer.Import(pp.path)
 		if err == nil {
-			initialSource = fmt.Sprintf(initialSourceTemplate, pp.path, string(goreStartup), pp.code)
+			initialSource = fmt.Sprintf(initialSourceTemplate, pp.path, DropFirstLine(string(goreStartup)), pp.code)
 			break
 		}
 		debugf("could not import %q: %s", pp.path, err)
@@ -403,6 +404,13 @@ func (s *Session) reset() error {
 	return nil
 }
 
+func DropFirstLine(paragraph string) string {
+	newLine := regexp.MustCompile("\\n")
+	lines := newLine.Split(paragraph, -1)
+	rest := lines[1:]
+	return strings.Join(rest, "\n")
+}
+
 func (s *Session) Reset() error {
   var initialSource string
   goreStartup, _ := ioutil.ReadFile("/Users/ryan.gorsuch/.gorc")
@@ -410,7 +418,7 @@ func (s *Session) Reset() error {
 	for _, pp := range printerPkgs {
       _, err := s.Types.Importer.Import(pp.path)
       if err == nil {
-          initialSource = fmt.Sprintf(initialSourceTemplate, pp.path, string(goreStartup), pp.code)
+          initialSource = fmt.Sprintf(initialSourceTemplate, pp.path, DropFirstLine(string(goreStartup)), pp.code)
           break
       }
       debugf("could not import %q: %s", pp.path, err)

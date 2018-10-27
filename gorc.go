@@ -1,23 +1,46 @@
+//package main
+
 import (
-    "bytes"
-    "encoding/json"
+	_ "bytes"
+    _ "encoding/json"
     "fmt"
-    "github.com/google/uuid"
-    "github.com/gorilla/websocket"
-    "log"
-    "io/ioutil"
-    "net/http"
-    "os"
+    _ "github.com/google/uuid"
+    _ "github.com/gorilla/websocket"
+    _ "log"
+    _ "io/ioutil"
+    _ "net/http"
+    _ "os"
     "regexp"
     "strings"
-    "sync"
-    "time"
-    "reno-hammer-client/structs"
+    _ "sync"
+    _ "time"
 )
 
+func DropFirstLine(paragraph string) string {
+	newLine := regexp.MustCompile("\\n")
+	lines := newLine.Split(paragraph, -1)
+	rest := lines[1:]
+	return strings.Join(rest, "\\n")
+}
 
-func IgnoreThis() {
-    _ = uuid.New()
+func Erase(regex, s string) string {
+    r, err := regexp.Compile(regex);
+    if err != nil {
+		fmt.Printf("Failed to compile regex: %s, err: %v", regex, err)
+		return ""
+    }
+    erased := r.ReplaceAll([]byte(s), nil)
+    return string(erased)
+}
+
+func Capture(regex, s string) string {
+	re, err := regexp.Compile(regex);
+	if err != nil {
+		fmt.Printf("Failed to compile regex: %s, err: %v", regex, err)
+		return ""
+	}
+	captured := re.FindString(s)
+	return captured
 }
 
 func Min(x, y int) int {
