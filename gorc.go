@@ -4,17 +4,42 @@ import (
 	_ "bytes"
     _ "encoding/json"
     "fmt"
-    _ "github.com/google/uuid"
+	"time"
+
+	"github.com/google/uuid"
+    "golang.org/x/tools/go/packages"
     _ "github.com/gorilla/websocket"
+	_ "github.com/go-test/deep"
     _ "log"
     _ "io/ioutil"
     _ "net/http"
+    "net/url"
     _ "os"
     "regexp"
     "strings"
     _ "sync"
-    _ "time"
 )
+
+func init() {
+    // ignore this unused package which is imported for convenience
+    _ = uuid.New
+    _ = url.URL{}
+    _ = websocket.Conn{}
+}
+
+
+func isToday(t time.Time, location *time.Location) bool {
+	var today, someday struct {
+		year  int
+		month time.Month
+		day   int
+	}
+
+	today.year, today.month, today.day = time.Now().In(location).Date()
+	someday.year, someday.month, someday.day = t.In(location).Date()
+
+	return today == someday
+}
 
 func DropFirstLine(paragraph string) string {
 	newLine := regexp.MustCompile("\\n")
@@ -23,6 +48,7 @@ func DropFirstLine(paragraph string) string {
 	return strings.Join(rest, "\\n")
 }
 
+// Erase the matching regex from the string
 func Erase(regex, s string) string {
     r, err := regexp.Compile(regex);
     if err != nil {
@@ -33,14 +59,17 @@ func Erase(regex, s string) string {
     return string(erased)
 }
 
+// Capture the matching part of the string, or else ""
 func Capture(regex, s string) string {
 	re, err := regexp.Compile(regex);
 	if err != nil {
 		fmt.Printf("Failed to compile regex: %s, err: %v", regex, err)
 		return ""
 	}
-	captured := re.FindString(s)
-	return captured
+	if captured := re.FindStringSubmatch(s); len(captured) > 1 {
+		return captured[1]
+	}
+	return ""
 }
 
 func Min(x, y int) int {
